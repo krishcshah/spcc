@@ -1,0 +1,345 @@
+BFS
+from collections import deque
+
+def bfs(graph, q, visited):
+    if len(q) == 0:
+        return
+
+    node = q.popleft()
+    visited[node] = True
+    print(f'->{node}', end='')
+
+    for neigh in graph[node]:
+        if visited[neigh] == False:
+            q.append(neigh)
+
+    bfs(graph, q, visited)
+
+n = int(input('Enter number of nodes: '))
+m = int(input('Enter number of edges: '))
+
+graph = [[] for i in range(n)]
+print(f'Input {m} edges\nu v')
+for _ in range(m):
+    u, v = map(int, input().split())
+    graph[u].append(v)
+    graph[v].append(u)
+
+print(graph)
+visited = [False for i in range(n)]
+q = deque()
+q.append(0)
+bfs(graph, q, visited)
+
+
+
+
+
+DFS
+def dfs(node, graph, visited):
+    print(f'->{node}', end='')
+    visited[node] = True
+
+    for neigh in graph[node]:
+        if visited[neigh] ==  False:
+            dfs(neigh, graph, visited)
+
+n = int(input('Enter number of nodes: '))
+m = int(input('Enter number of edges: '))
+
+graph = [[] for i in range(n)]
+print(f'Input {m} edges\nu v')
+for _ in range(m):
+    u, v = map(int, input().split())
+    graph[u].append(v)
+    graph[v].append(u)
+
+print(graph)
+visited = [False for i in range(n)]
+dfs(0, graph, visited)
+
+
+
+
+DFID
+def getMaxDepth(node, depth, maxDepth, graph, visited):
+    visited[node] = True
+    maxDepth[0] = max(maxDepth[0], depth)
+
+    for neigh in graph[node]:
+        if visited[neigh] == False:
+            getMaxDepth(neigh, depth+1, maxDepth, graph, visited)
+
+
+def dfs(node, graph, visited, depth, maxDepth, g, found):
+    visited[node] = True
+    print(f'->{node}', end='')
+
+    if node == g:
+        found[0] = True
+        return
+
+    if depth == maxDepth:
+        return
+
+    for neigh in graph[node]:
+        if visited[neigh] == False:
+            dfs(neigh, graph, visited, depth+1, maxDepth, g, found)
+            if found[0] == True:
+                break
+
+def dfid(graph, n, g):
+    maxDepth = [0]
+    getMaxDepth(0, 0, maxDepth, graph, [False for i in range(n)])
+
+    found = [False]
+    for d in range(maxDepth[0]+1):
+        visited = [False for i in range(n)]
+        print(f'Depth {d}: ', end='')
+        dfs(0, graph, visited, 0, d, g, found)
+        if found[0] == True:
+            break
+        print()
+
+n = int(input('Enter number of nodes: '))
+m = int(input('Enter number of edges: '))
+
+graph = [[] for i in range(n)]
+print(f'Input {m} edges\nu v')
+for _ in range(m):
+    u, v = map(int, input().split())
+    graph[u].append(v)
+    graph[v].append(u)
+
+g = int(input('Enter goal node: '))
+dfid(graph, n, g)
+
+
+
+UCS 
+from queue import PriorityQueue
+
+def ucs(start, goal, graph):
+    queue = PriorityQueue()
+    queue.put((0, [start]))
+    visited = set()
+    while not queue.empty():
+        cost, path = queue.get()
+        node = path[-1]
+        if node == goal:
+            return cost, path
+        if node not in visited:
+            visited.add(node)
+            for neighbor, weight in graph[node].items():
+                if neighbor not in visited:
+                    new_cost = cost + weight
+                    new_path = path + [neighbor]
+                    queue.put((new_cost, new_path))
+    return -1, []
+
+graph = {}
+noOfVertices = int(input("Enter the number of vertices: "))
+for i in range(noOfVertices):
+    vertex = input(f"\nEnter vertex {i+1}: ")
+    numOfNeighbors = int(input("Enter the number of neighbors: "))
+    neighbors = {}
+    for j in range(numOfNeighbors):
+        neighbor = input(f"Enter neighbor {j+1}: ")
+        weight = int(input(f"Enter the weight of edge ({vertex}, {neighbor}): "))
+        neighbors[neighbor] = weight
+    graph[vertex] = neighbors
+
+start = input("\nEnter the start node: ")
+goal = input("Enter the goal node: ")
+
+cost, path = ucs(start, goal, graph)
+if cost == -1:
+    print("\nPath not found.")
+else:
+    print(f"\nThe minimum cost from {start} to {goal} = {cost}")
+    print(f"The path is: {' -> '.join(path)}")
+
+
+
+
+5
+
+A STAR
+import queue
+
+class Node:
+    def __init__(self, name, g_score, f_score):
+        self.name = name
+        self.g_score = g_score
+        self.f_score = f_score
+
+    def __lt__(self, other):
+        return self.f_score < other.f_score
+
+class NodeComparer:
+    def __call__(self, a, b):
+        return a.f_score > b.f_score
+
+def astar(start, goal, graph, heuristic):
+    frontier = queue.PriorityQueue()
+    frontier.put(Node(start, 0, heuristic[start]))
+    g_score = {start: 0}
+    f_score = {start: heuristic[start]}
+    explored = {}
+    while not frontier.empty():
+        current = frontier.get()
+        if current.name == goal:
+            return g_score[current.name]
+        if current.name in explored:
+            continue
+        explored[current.name] = True
+        for neigh in range(len(graph[current.name])):
+            if graph[current.name][neigh] != 0:
+                tentative_g_score = g_score[current.name] + graph[current.name][neigh]
+                if neigh in g_score and tentative_g_score >= g_score[neigh]:
+                    continue
+                g_score[neigh] = tentative_g_score
+                f_score[neigh] = tentative_g_score + heuristic[neigh]
+                frontier.put(Node(neigh, g_score[neigh], f_score[neigh]))
+    return -1
+
+if __name__ == "__main__":
+    n = int(input("Enter the number of vertices: "))
+    m = int(input('Enter number of edges: '))
+
+    graph = [[0 for i in range(n)] for j in range(n)]
+    print('Enter edges\nsource destination weight')
+    for i in range(m):
+        u, v, d = map(int, input().split())
+        graph[u][v] = d
+
+    start = int(input("Enter the start node: "))
+    goal = int(input("Enter the goal node: "))
+
+    heuristic = [0 for i in range(n)]
+    for vertex in range(n):
+        heuristic[vertex] = int(input("Enter the heuristic for {}: ".format(vertex)))
+
+    cost = astar(start, goal, graph, heuristic)
+    if cost == -1:
+        print("Path not found.")
+    else:
+        print("The minimum cost from {} to {} is {}.".format(start, goal, cost))
+
+
+
+
+
+
+SIMULATED ANNEALING
+import random
+import math
+
+def objFunc(x):
+    return math.sin(x)-math.cos(2*x)
+
+def simulatedAnnealing(x, maxItr, T):
+    fx = objFunc(x)
+    Tmin = 0.0001
+
+    for _ in range(maxItr):
+        alpha = 0.99
+        T = T*alpha
+
+        dx = (random.random()*2-1)*T
+        next_x = x+dx
+        next_fx = objFunc(next_x)
+
+        if next_fx > fx or random.random() < math.exp((next_fx-fx)/T):
+            x = next_x
+            fx = next_fx
+
+        if T < Tmin:
+            break
+    
+    return x
+
+
+x = 1
+maxIter = 1000
+T = 1.0
+
+res = simulatedAnnealing(x, maxIter, T)
+
+# Print the results
+print(f'Point found: {res}\nf(x): {objFunc(res)}')
+
+
+
+
+HILL CLIMBING
+import random
+import math
+
+def objFunc(x):
+    return math.sin(x)-math.cos(2*x)
+
+def hillClimb(x, step, maxItr):
+    fx = objFunc(x)
+
+    for _ in range(maxItr):
+        dx = (random.random()*2 - 1)*step
+        next_x = x+dx
+        next_fx = objFunc(next_x)
+
+        if next_fx > fx:
+            fx = next_fx
+            x = next_x
+    
+    return x
+
+x = 1
+step = 0.01
+maxItr = 1000
+
+res = hillClimb(x, step, maxItr)
+print(f'Point found: {res}\nf(x): {objFunc(res)}')
+
+
+
+
+
+GENETIC
+import random
+
+def fitness(individual):
+    return sum(individual)
+
+def genetic_algorithm(population_size, chromosome_size, generations, mutation_rate):
+    population = [[random.randint(0, 1) for j in range(chromosome_size)] for i in range(population_size)]
+
+    for generation in range(generations):
+        fitness_scores = [fitness(individual) for individual in population]
+        parents = []
+        for i in range(population_size // 2):
+            parent1 = population[fitness_scores.index(max(fitness_scores))]
+            fitness_scores[fitness_scores.index(max(fitness_scores))] = -1
+
+            parent2 = population[fitness_scores.index(max(fitness_scores))]
+            fitness_scores[fitness_scores.index(max(fitness_scores))] = -1
+
+            parents.append((parent1, parent2))
+        
+        population = []
+        for parent1, parent2 in parents:
+            child1, child2 = parent1[:], parent2[:]
+            for i in range(chromosome_size):
+                if random.random() < mutation_rate:
+                    child1[i] = 1 - child1[i]
+                if random.random() < mutation_rate:
+                    child2[i] = 1 - child2[i]
+            population.append(child1)
+            population.append(child2)
+    
+    fitness_scores = [fitness(individual) for individual in population]
+    return population[fitness_scores.index(max(fitness_scores))]
+
+
+fittest_individual = genetic_algorithm(
+    population_size=100, chromosome_size=10, generations=50, mutation_rate=0.01)
+print("Fittest individual:", fittest_individual)
